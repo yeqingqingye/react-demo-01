@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css">
+    <script type="text/javascript" src="js/react.development.js"></script>
+    <script type="text/javascript" src="js/react-dom.development.js"></script>
+    <script type="text/javascript" src="js/babel.min.js"></script>
+    <style>
+        .list-group-item button {
+            margin-top: -6px;
+            margin-left: 10px;
+            display: none;
+        }
+
+        .list-group-item:hover button {
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+
+    class MessageBox extends React.Component {
+
+        constructor() {
+            super()
+            this.state = {
+                messageList: []
+            }
+        }
+
+        handleSendClick = (e) => {
+            var userName = this.refs.username.value;
+            var age = this.refs.userAge.value;
+            var time = new Date().toLocaleString();
+            if (!userName || !age) return
+            for (var i = 0; i < this.state.messageList.length; i++) {
+                if (this.state.messageList[i].userName == userName) {
+                    alert('当前列表中已有此用户名')
+                    return
+                }
+            }
+            var messages = [...this.state.messageList, {userName, age, time}];
+            this.setState({
+                messageList: messages
+            });
+            this.refs.username.value = '';
+            this.refs.userAge.value = '';
+            sessionStorage._saveMessageInfo = JSON.stringify(messages);
+        }
+        //垃圾事件 暂时用不了
+        handleKeyDown = () => {
+            console.log(1);
+        }
+
+        componentDidMount() {
+            var _saveMessageInfo = sessionStorage._saveMessageInfo && JSON.parse(sessionStorage._saveMessageInfo);
+            this.setState({
+                messageList: _saveMessageInfo ? _saveMessageInfo : []
+            });
+        }
+
+        deleteClick(index) {
+            if (confirm('是否要删除此前留言吗')) {
+                var messageList = sessionStorage._saveMessageInfo ? JSON.parse(sessionStorage._saveMessageInfo) : this.state.messageList;
+                messageList.splice(index, 1);
+                this.setState({messageList});
+                sessionStorage._saveMessageInfo = JSON.stringify(messageList);
+            }
+        }
+
+        render() {
+            var _this = this;
+            return (
+                <div className="container">
+                    <div className="row">
+                        <div className="panel panel-default">
+                            <div className="panel-heading text-center">这是一个留言板的操作</div>
+                            <div className="panel-body">
+                                <ul className="list-group">
+                                    {
+                                        this.state.messageList.map(function (item, index) {
+                                            return (
+                                                <li className="list-group-item" key={index}>
+                                                    <span>姓名 ：<span>{item.userName + ' ; '}</span></span>
+                                                    <span>&nbsp;&nbsp;&nbsp;年龄 ：<span>{item.age}</span></span>
+                                                    <button className="btn btn-danger btn-sm pull-right" onClick={_this.deleteClick.bind(_this, index)}>删除</button>
+                                                    <span className="pull-right">{item.time ? item.time : new Date().toLocaleString()}</span>
+                                                </li>
+                                            )
+                                        })
+                                    }
+                                </ul>
+                            </div>
+                            <div className="panel-footer">
+                                <div className="input-group">
+                                    <label htmlFor="username">姓名 ：</label>
+                                    <input type="text" placeholder="请输入用户名" className="form-control" name="username" ref="username"/>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="userAge">年龄 ：</label>
+                                    <input type="text" placeholder="请输入年龄" className="form-control" name="userAge" ref="userAge"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="list-group">
+                            <button className="btn btn-primary" onClick={this.handleSendClick} onKeyDown={this.handleKeyDown}>提交</button>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+    }
+
+    ReactDOM.render(<MessageBox/>, document.querySelector('#root'));
+
+
+    //事件绑定:如果这样写 onClick={this.handleSendClick}  这里的this不指向当前实例 掉这个方法需要写成箭头函数
+    //如果这样写 onClick={()=>{this.handleSendClick}} 这里的this已经矫正了
+    //如果这样写 先绑定this var _this = this;
+
+
+</script>
+
+
+</body>
+</html>
